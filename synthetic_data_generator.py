@@ -9,6 +9,7 @@ import os
 import json
 import shutil
 import glob
+import cv2
 from PIL import Image
 import debugpy
 
@@ -23,7 +24,7 @@ NUM_OF_NEEDLE_HOLDERS_VERSIONS = len(glob.glob(os.path.join(TOOLS_DEFAULT_FOLDER
 NUM_OF_TWEEZERS_VERSIONS = len(glob.glob(os.path.join(TOOLS_DEFAULT_FOLDER, "tweezers", "*.obj")))
 print(f"Number of needle holders versions: {NUM_OF_NEEDLE_HOLDERS_VERSIONS}")
 print(f"Number of tweezers versions: {NUM_OF_TWEEZERS_VERSIONS}")
-RIGHT_HAND_FILE = "right_hand_centered.obj"
+RIGHT_HAND_FILE = "right_hand.obj"
 OUTPUT_DIR_DEFAULT = "synthetic_data"
 BACKGROUND_PATH = "background.png"
 
@@ -156,6 +157,58 @@ def set_frame_positions(needle_holders, tweezers, right_hand, left_hand, light):
     return needle_holder, tweezer
 
 
+def get_random_background(background_path, im_width, im_height):
+    """
+    Get a random background image.
+    Args:
+        background_path (str): Path to the background image.
+        im_width (int): Width of the image.
+        im_height (int): Height of the image.
+    Returns:
+        PIL.Image: The background image with random transformations applied.
+    """
+    img = cv2.imread(background_path)
+    img = cv2.resize(img, (im_width, im_height))
+
+    # Random brightness (0.8 to 1.2)
+    brightness_factor = random.uniform(0.8, 1.2)
+    img = cv2.convertScaleAbs(img, alpha=brightness_factor, beta=0)
+
+    # Random contrast (-30 to +30)
+    contrast_shift = random.randint(-30, 30)
+    img = cv2.convertScaleAbs(img, alpha=1.0, beta=contrast_shift)
+
+    # Random zoom (1.0 to 1.2)
+    zoom_factor = random.uniform(1.0, 1.2)
+    if zoom_factor > 1.0:
+        new_w = int(im_width / zoom_factor)
+        new_h = int(im_height / zoom_factor)
+        center_x, center_y = im_width // 2, im_height // 2
+        x1 = center_x - new_w // 2
+        y1 = center_y - new_h // 2
+        cropped = img[y1:y1+new_h, x1:x1+new_w]
+        img = cv2.resize(cropped, (im_width, im_height))
+
+    # Optional blur
+    if random.random() < 0.5:
+        kernel_size = random.choice([3, 5])
+        img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
+
+    # Optional hue/saturation shift
+    if random.random() < 0.5:
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV).astype(np.int32)
+        hue_shift = random.randint(-10, 10)
+        sat_shift = random.randint(-20, 20)
+        hsv[..., 0] = (hsv[..., 0] + hue_shift) % 180
+        hsv[..., 1] = np.clip(hsv[..., 1] + sat_shift, 0, 255)
+        hsv = hsv.astype(np.uint8)
+        img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+
+    # Convert to RGB for PIL
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return Image.fromarray(img_rgb)
+
+
 def overlay_backgrounds(output_dir, im_width, im_height):
     """
     Overlay the background on the images.
@@ -165,9 +218,7 @@ def overlay_backgrounds(output_dir, im_width, im_height):
         im_height (int): Height of the images.
     """
     for img_path in glob.glob(os.path.join(output_dir, 'images', '*.png')):
-        background = Image.open(BACKGROUND_PATH).resize((im_width, im_height))
-        
-        # TODO: augment the background randomly
+        background = get_random_background(BACKGROUND_PATH, im_width, im_height)
 
         img = Image.open(img_path)
 
