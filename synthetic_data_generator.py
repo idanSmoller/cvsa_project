@@ -14,7 +14,7 @@ from PIL import Image
 import debugpy
 
 
-NUM_IMAGES = 20
+NUM_IMAGES = 2000
 
 BASE_PATH = "/datashare/project"
 TOOLS_DEFAULT_FOLDER = os.path.join(BASE_PATH, "surgical_tools_models")
@@ -26,7 +26,7 @@ print(f"Number of needle holders versions: {NUM_OF_NEEDLE_HOLDERS_VERSIONS}")
 print(f"Number of tweezers versions: {NUM_OF_TWEEZERS_VERSIONS}")
 RIGHT_HAND_FILE = "right_hand.obj"
 OUTPUT_DIR_DEFAULT = "synthetic_data"
-BACKGROUND_PATH = "background.png"
+BACKGROUND_PATH = "backgrounds"
 
 
 def load_objects(tools_base_folder, right_hand_path):
@@ -105,7 +105,7 @@ def load_camera_params(camera_params_path):
     return cam2world_matrix, im_width, im_height
 
 
-def set_frame_positions(needle_holders, tweezers, right_hand, left_hand, light):
+def set_frame_positions(needle_holders, tweezers, right_hand, left_hand, light, nh_missing_prob=0.05, t_missing_prob=0.05):
     """
     Choose a random version of the needle holder and tweezer, and set their positions and rotations randomly.
     Args:
@@ -114,59 +114,72 @@ def set_frame_positions(needle_holders, tweezers, right_hand, left_hand, light):
         right_hand (bproc.types.Object): Right hand object.
         left_hand (bproc.types.Object): Left hand object.
         light (bproc.types.Light): Light object to set its position and energy.
+        nh_missing_prob (float): Probability of missing the needle holder.
+        t_missing_prob (float): Probability of missing the tweezer.
     Returns:
         tuple: The chosen needle holder and tweezer objects (returned to hide after rendering).
     """
     light.set_location(np.random.uniform([8, -2, 0], [12, 6, 5]))
     light.set_energy(np.random.uniform(2000, 5000))
 
-    needle_holder_version = random.randint(1, NUM_OF_NEEDLE_HOLDERS_VERSIONS)
-    needle_holder = needle_holders[needle_holder_version - 1]
-    needle_holder.hide(False)
-    needle_holder_location = np.random.uniform([-3, -1.2, -1], [-1, 0.2, 1])
-    needle_holder_rotation = np.random.uniform([0, 0, (-5/8)*pi], [0, (1/2)*pi, (-1/4)*pi])
-    needle_holder.set_rotation_euler(needle_holder_rotation)
-    needle_holder.set_location(needle_holder_location)
+    hide_nh = np.random.rand() < nh_missing_prob
+    if not hide_nh:
+        needle_holder_version = random.randint(1, NUM_OF_NEEDLE_HOLDERS_VERSIONS)
+        needle_holder = needle_holders[needle_holder_version - 1]
+        needle_holder.hide(False)
+        needle_holder_location = np.random.uniform([-3, -1.2, -1], [-1, 0.2, 1])
+        needle_holder_rotation = np.random.uniform([0, 0, (-5/8)*pi], [0, (1/2)*pi, (-1/4)*pi])
+        needle_holder.set_rotation_euler(needle_holder_rotation)
+        needle_holder.set_location(needle_holder_location)
 
-    right_hand_location = needle_holder_location + \
-        np.array([-0.6 + 0.02 * needle_holder_version, 0.5, 0.5 + 0.1 * needle_holder_version]) + \
-        np.random.uniform([-0.1, -0.1, -0.1], [0.1, 0.1, 0.1])
-    right_hand_rotation = needle_holder_rotation + \
-        np.array([0, 0, -(1/2)*pi]) + \
-        np.random.uniform([-0.1, -0.1, -0.1], [0.1, 0.1, 0.1])
-    right_hand.set_rotation_euler(right_hand_rotation)
-    right_hand.set_location(right_hand_location)
+        right_hand_location = needle_holder_location + \
+            np.array([-0.6 + 0.02 * needle_holder_version, 0.5, 0.5 + 0.1 * needle_holder_version]) + \
+            np.random.uniform([-0.1, -0.1, -0.1], [0.1, 0.1, 0.1])
+        right_hand_rotation = needle_holder_rotation + \
+            np.array([0, 0, -(1/2)*pi]) + \
+            np.random.uniform([-0.1, -0.1, -0.1], [0.1, 0.1, 0.1])
+        right_hand.hide(False)
+        right_hand.set_rotation_euler(right_hand_rotation)
+        right_hand.set_location(right_hand_location)
+    else:
+        right_hand.hide()
 
-    tweezer_version = random.randint(1, NUM_OF_TWEEZERS_VERSIONS)
-    tweezer = tweezers[tweezer_version - 1]
-    tweezer.hide(False)
-    tweezer_location = np.random.uniform([-1, -0.7, -1], [-0.5, 1.5, 1])
-    tweezer_rotation = np.random.uniform([0, 0, (10/12)*pi], [0, (1/2)*pi, (13/12)*pi])
-    tweezer.set_rotation_euler(tweezer_rotation)
-    tweezer.set_location(tweezer_location)
+    hide_t = np.random.rand() < t_missing_prob
+    if not hide_t:
+        tweezer_version = random.randint(1, NUM_OF_TWEEZERS_VERSIONS)
+        tweezer = tweezers[tweezer_version - 1]
+        tweezer.hide(False)
+        tweezer_location = np.random.uniform([-1, -0.7, -1], [-0.5, 1.5, 1])
+        tweezer_rotation = np.random.uniform([0, 0, (10/12)*pi], [0, (1/2)*pi, (13/12)*pi])
+        tweezer.set_rotation_euler(tweezer_rotation)
+        tweezer.set_location(tweezer_location)
 
-    left_hand_location = tweezer_location + \
-        np.array([-0.5, 0.6, 0.5]) + \
-        np.random.uniform([0, -0.1, -0.1], [0.1, 0.1, 0.1])
-    left_hand_rotation = tweezer_rotation + \
-        np.array([(1/2)*pi, -(1/2)*pi, 0]) + \
-        np.random.uniform([-0.1, -0.1, -0.1], [0.1, 0.1, 0.1])
-    left_hand.set_rotation_euler(left_hand_rotation)
-    left_hand.set_location(left_hand_location)
+        left_hand_location = tweezer_location + \
+            np.array([-0.5, 0.6, 0.5]) + \
+            np.random.uniform([0, -0.1, -0.1], [0.1, 0.1, 0.1])
+        left_hand_rotation = tweezer_rotation + \
+            np.array([(1/2)*pi, -(1/2)*pi, 0]) + \
+            np.random.uniform([-0.1, -0.1, -0.1], [0.1, 0.1, 0.1])
+        left_hand.hide(False)
+        left_hand.set_rotation_euler(left_hand_rotation)
+        left_hand.set_location(left_hand_location)
+    else:
+        left_hand.hide()
 
     return needle_holder, tweezer
 
 
-def get_random_background(background_path, im_width, im_height):
+def get_random_background(backgrounds_folder_path, im_width, im_height):
     """
     Get a random background image.
     Args:
-        background_path (str): Path to the background image.
+        backgrounds_folder_path (str): Path to the folder containing background images.
         im_width (int): Width of the image.
         im_height (int): Height of the image.
     Returns:
         PIL.Image: The background image with random transformations applied.
     """
+    background_path = random.choice(glob.glob(os.path.join(backgrounds_folder_path, '*.png')))
     img = cv2.imread(background_path)
     img = cv2.resize(img, (im_width, im_height))
 
@@ -178,31 +191,10 @@ def get_random_background(background_path, im_width, im_height):
     contrast_shift = random.randint(-30, 30)
     img = cv2.convertScaleAbs(img, alpha=1.0, beta=contrast_shift)
 
-    # Random zoom (1.0 to 1.2)
-    zoom_factor = random.uniform(1.0, 1.2)
-    if zoom_factor > 1.0:
-        new_w = int(im_width / zoom_factor)
-        new_h = int(im_height / zoom_factor)
-        center_x, center_y = im_width // 2, im_height // 2
-        x1 = center_x - new_w // 2
-        y1 = center_y - new_h // 2
-        cropped = img[y1:y1+new_h, x1:x1+new_w]
-        img = cv2.resize(cropped, (im_width, im_height))
-
     # Optional blur
     if random.random() < 0.5:
         kernel_size = random.choice([3, 5])
         img = cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
-
-    # Optional hue/saturation shift
-    if random.random() < 0.5:
-        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV).astype(np.int32)
-        hue_shift = random.randint(-10, 10)
-        sat_shift = random.randint(-20, 20)
-        hsv[..., 0] = (hsv[..., 0] + hue_shift) % 180
-        hsv[..., 1] = np.clip(hsv[..., 1] + sat_shift, 0, 255)
-        hsv = hsv.astype(np.uint8)
-        img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
     # Convert to RGB for PIL
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
