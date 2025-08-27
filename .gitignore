@@ -1,0 +1,6 @@
+synthetic_data/images
+synthetic_data/coco_annotations.json
+
+.DS_Store
+launch.json
+.vscode/
