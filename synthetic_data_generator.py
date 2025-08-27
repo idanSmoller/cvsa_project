@@ -122,10 +122,11 @@ def set_frame_positions(needle_holders, tweezers, right_hand, left_hand, light, 
     light.set_location(np.random.uniform([8, -2, 0], [12, 6, 5]))
     light.set_energy(np.random.uniform(2000, 5000))
 
+    needle_holder_version = random.randint(1, NUM_OF_NEEDLE_HOLDERS_VERSIONS)
+    needle_holder = needle_holders[needle_holder_version - 1]
+    
     hide_nh = np.random.rand() < nh_missing_prob
     if not hide_nh:
-        needle_holder_version = random.randint(1, NUM_OF_NEEDLE_HOLDERS_VERSIONS)
-        needle_holder = needle_holders[needle_holder_version - 1]
         needle_holder.hide(False)
         needle_holder_location = np.random.uniform([-3, -1.2, -1], [-1, 0.2, 1])
         needle_holder_rotation = np.random.uniform([0, 0, (-5/8)*pi], [0, (1/2)*pi, (-1/4)*pi])
@@ -142,12 +143,14 @@ def set_frame_positions(needle_holders, tweezers, right_hand, left_hand, light, 
         right_hand.set_rotation_euler(right_hand_rotation)
         right_hand.set_location(right_hand_location)
     else:
+        needle_holder.hide()
         right_hand.hide()
 
+    tweezer_version = random.randint(1, NUM_OF_TWEEZERS_VERSIONS)
+    tweezer = tweezers[tweezer_version - 1]
+    
     hide_t = np.random.rand() < t_missing_prob
     if not hide_t:
-        tweezer_version = random.randint(1, NUM_OF_TWEEZERS_VERSIONS)
-        tweezer = tweezers[tweezer_version - 1]
         tweezer.hide(False)
         tweezer_location = np.random.uniform([-1, -0.7, -1], [-0.5, 1.5, 1])
         tweezer_rotation = np.random.uniform([0, 0, (10/12)*pi], [0, (1/2)*pi, (13/12)*pi])
@@ -164,6 +167,7 @@ def set_frame_positions(needle_holders, tweezers, right_hand, left_hand, light, 
         left_hand.set_rotation_euler(left_hand_rotation)
         left_hand.set_location(left_hand_location)
     else:
+        tweezer.hide()
         left_hand.hide()
 
     return needle_holder, tweezer
