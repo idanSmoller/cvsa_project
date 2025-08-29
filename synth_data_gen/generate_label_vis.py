@@ -1,6 +1,6 @@
 import os
 
-OUTPUT_DIR_DEFAULT = "synthetic_data"
+OUTPUT_DIR_DEFAULT = "synth_data_gen/synthetic_data"
 
 
 def make_annotations_vis(n):

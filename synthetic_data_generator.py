@@ -24,9 +24,9 @@ NUM_OF_NEEDLE_HOLDERS_VERSIONS = len(glob.glob(os.path.join(TOOLS_DEFAULT_FOLDER
 NUM_OF_TWEEZERS_VERSIONS = len(glob.glob(os.path.join(TOOLS_DEFAULT_FOLDER, "tweezers", "*.obj")))
 print(f"Number of needle holders versions: {NUM_OF_NEEDLE_HOLDERS_VERSIONS}")
 print(f"Number of tweezers versions: {NUM_OF_TWEEZERS_VERSIONS}")
-RIGHT_HAND_FILE = "right_hand.obj"
-OUTPUT_DIR_DEFAULT = "synthetic_data"
-BACKGROUND_PATH = "backgrounds"
+RIGHT_HAND_FILE = "synth_data_gen/right_hand.obj"
+OUTPUT_DIR_DEFAULT = "synth_data_gen/synthetic_data"
+BACKGROUND_PATH = "synth_data_gen/backgrounds"
 
 
 def load_objects(tools_base_folder, right_hand_path):
