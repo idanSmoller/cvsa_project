@@ -5,13 +5,13 @@ To run the synthetic data generation pipeline, follow these steps:
    pip install -r requirements.txt
    ```
 
-3. Run the data generation script:
+2. Run the data generation script:
    ```
    blenderproc run synthetic_data_generator.py
    ```
 
-4. (optional) Visualize the generated annotations:
+3. (optional) Visualize the generated annotations:
    ```
-   python generate_label_vis.py
+   python synth_data_gen/generate_label_vis.py
    ```
 
